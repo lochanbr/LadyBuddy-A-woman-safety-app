@@ -1,11 +1,15 @@
 package com.teamDroiders.ladybuddy;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
 
 /**
  * Services :- Services in Android are a special component that facilitates an application to run in the background in order
@@ -15,6 +19,7 @@ import android.util.Log;
  */
 
 public class ScreenOnOffBackgroundService extends Service {
+    private static final String CHANNEL_ID = "WatchHer_Service_Channel";
 
     /**
      * BroadcastReceiver :- Broadcast in android is the system-wide events that can occur when the device starts,
@@ -68,12 +73,27 @@ public class ScreenOnOffBackgroundService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+        // START_STICKY ensures the service restarts if it's killed
+        return START_STICKY;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // --- START OF NOTIFICATION CHANNEL LOGIC ---
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationChannel serviceChannel = new android.app.NotificationChannel(
+                    CHANNEL_ID,
+                    "WatchHer Background Service",
+                    android.app.NotificationManager.IMPORTANCE_DEFAULT
+            );
+            android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(serviceChannel);
+            }
+        }
+        // --- END OF NOTIFICATION CHANNEL LOGIC ---
 
         /**
          * IntentFilter :- Implicit intent uses the intent filter to serve the user request.
@@ -88,13 +108,28 @@ public class ScreenOnOffBackgroundService extends Service {
         intentFilter.addAction("android.intent.action.SCREEN_OFF");
 
         // Set broadcast receiver priority.
-        intentFilter.setPriority(100);
+        intentFilter.setPriority(999);
         // Create a network change broadcast receiver.
         screenOnOffReceiver = new ScreenOnOffReceiver();
 
-
         // Register the broadcast receiver with the intent filter object.
         registerReceiver(screenOnOffReceiver, intentFilter);
+
+        // 2. Build the notification
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Watch Her Safety Active")
+                .setContentText("Listening for emergency triggers...")
+                .setSmallIcon(R.mipmap.ic_launcher) // Use your app icon
+                .setContentIntent(pendingIntent)
+                .build();
+
+        // 3. Start the service in the foreground
+        // Use a unique positive integer for the ID
+        startForeground(1, notification);
 
 
 

@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,6 +39,9 @@ public class Magnetometer extends AppCompatActivity implements SensorEventListen
 
 
     private double magD;
+    private double ambientBaseline = 0; // Stores the room's normal magnetic field
+    private boolean isCalibrating = false; // Tracks if we are currently calibrating
+    private double sensitivity = 20; // How much higher than baseline to trigger alarm
 
     /**
      * Sensors :- Android sensors are virtual devices that provide data coming from a set of physical sensors:
@@ -128,16 +132,21 @@ public class Magnetometer extends AppCompatActivity implements SensorEventListen
         z_cor = findViewById( R.id.z_cor );
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-
+        Button calibrateBtn = findViewById(R.id.btn_calibrate);
+        calibrateBtn.setOnClickListener(v -> {
+            isCalibrating = true;
+            Toast.makeText(this, "Calibrating... Keep phone still", Toast.LENGTH_SHORT).show();
+        });
 
         // getDefaultSensor, SENSOR_DELAY_NORMAL, TYPE_MAGNETIC_FIELD and registerListener:- read by just tapping on it.
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (magnetometer != null){
             sensorManager.registerListener(Magnetometer.this,magnetometer,SensorManager.SENSOR_DELAY_NORMAL);
         }else {
-            magR.setText("Magnetometer not Supported");
+            magR.setText("Sensor Not Supported");
+            calibrateBtn.setEnabled(false); // Disable the button if hardware is missing
+            show_conditions.setText("This device lacks the required hardware for detection.");
         }
-
 
     }
 
@@ -153,6 +162,12 @@ public class Magnetometer extends AppCompatActivity implements SensorEventListen
             // sqrt = for finding square root
             x = sqrt (event.values[0]*event.values[0]+event.values[1]*event.values[1]+event.values[2]*event.values[2]);
 
+            if (isCalibrating) {
+                ambientBaseline = x; // Set the room's baseline
+                isCalibrating = false;
+                Toast.makeText(this, "Calibration Complete!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             /**
              * BigDecimal :- It consists of an arbitrary precision integer unscaled value and a 32-bit integer scale.
@@ -190,25 +205,41 @@ public class Magnetometer extends AppCompatActivity implements SensorEventListen
             z_cor.setText(Double.toString(new_z));
             z_cor.setBackgroundColor( Color.YELLOW );
 
+            if (ambientBaseline > 0) {
+                if (x > (ambientBaseline + sensitivity + 20)) {
+                    mediaPlayer = null;
+                    mediaPlayer = MediaPlayer.create(this, R.raw.beepd);
+                    mediaPlayer.start();
+                    show_conditions.setText("Finally electronic device detected");
+                } else if (x > (ambientBaseline + sensitivity)) {
+                    mediaPlayer = null;
+                    mediaPlayer = MediaPlayer.create(this, R.raw.beep);
+                    mediaPlayer.start();
+                    show_conditions.setText("Potential electronic device detected");
+                } else {
+                    mediaPlayer = null;
+                    show_conditions.setText("No Potential device detected");
+                }
+            } else {
+                double Pd=70d;
+                double Fd=90d;
+                if(Double.compare (x,Pd)>0 && Double.compare (x,Fd)<0) {
+                    mediaPlayer=null;
+                    mediaPlayer = MediaPlayer.create(this, R.raw.beep);
+                    mediaPlayer.start();
+                    show_conditions.setText( "Potential electronic device detected" );
 
-            double Pd=70d;
-            double Fd=90d;
-            if(Double.compare (x,Pd)>0 && Double.compare (x,Fd)<0) {
-                mediaPlayer=null;
-                mediaPlayer = MediaPlayer.create(this, R.raw.beep);
-                mediaPlayer.start();
-                show_conditions.setText( "Potential electronic device detected" );
+                }
+                else if(Double.compare (x,Fd)>0){
+                    mediaPlayer=null;
+                    mediaPlayer = MediaPlayer.create(this, R.raw.beepd);
+                    mediaPlayer.start();
+                    show_conditions.setText( "Finally electronic device detected" );
 
-            }
-            else if(Double.compare (x,Fd)>0){
-                mediaPlayer=null;
-                mediaPlayer = MediaPlayer.create(this, R.raw.beepd);
-                mediaPlayer.start();
-                show_conditions.setText( "Finally electronic device detected" );
-
-            }else {
-                mediaPlayer = null;
-                show_conditions.setText ("No Potential electronic device detected");
+                }else {
+                    mediaPlayer = null;
+                    show_conditions.setText ("No Potential electronic device detected. Please calibrate for better accuracy.");
+                }
             }
 
 

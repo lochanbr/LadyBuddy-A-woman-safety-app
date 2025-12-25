@@ -17,7 +17,6 @@ import android.net.Uri;
 import android.os.CountDownTimer;
 import android.telephony.SmsManager;
 import android.util.Log;
-import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
@@ -97,6 +96,12 @@ public class ScreenOnOffReceiver extends BroadcastReceiver {
         if(powerBtnTapCount ==6){ //?
             mediaPlayer.start ();
             mediaPlayer.setLooping (true);
+
+            // Launch flashing lights screen from receiver
+            android.content.Intent flashingIntent = new android.content.Intent(context, Flashing.class);
+            flashingIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(flashingIntent);
+
             powerBtnTapCount=0;
             countDownTimer.cancel ();
             timer=0;

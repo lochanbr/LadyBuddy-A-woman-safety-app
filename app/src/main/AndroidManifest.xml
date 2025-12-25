@@ -4,10 +4,16 @@
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -18,93 +24,106 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.teamDroiders.ladybuddy.AboutUs"
-            android:exported="true"
+            android:exported="false"
             android:label="AboutUs"
             android:parentActivityName="com.teamDroiders.ladybuddy.MainActivity"
             android:theme="@style/Theme.New" />
         <activity
             android:name="com.teamDroiders.ladybuddy.MagBtnInst"
-            android:exported="true"
+            android:exported="false"
             android:label="Detailed Instructions"
             android:parentActivityName="com.teamDroiders.ladybuddy.Magnetometer"
             android:theme="@style/Theme.New"/>
         <activity
             android:name="com.teamDroiders.ladybuddy.SosInsructionsActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="SOS Instructions"
             android:parentActivityName="com.teamDroiders.ladybuddy.SmsActivity"
             android:theme="@style/Theme.New" />
         <activity
             android:name="com.teamDroiders.ladybuddy.Magnetometer"
-            android:exported="true"
+            android:exported="false"
             android:label="Spy Camera Dectector"
             android:parentActivityName="com.teamDroiders.ladybuddy.ChoosenActivity"
-            android:theme="@style/Theme.New" />/>
+            android:theme="@style/Theme.New" />
         <activity
             android:name="com.teamDroiders.ladybuddy.MagnoInst"
-            android:exported="true"
+            android:exported="false"
             android:label="Manual Detection"
             android:parentActivityName="com.teamDroiders.ladybuddy.ChoosenActivity"
             android:theme="@style/Theme.New" />
         <activity
             android:name="com.teamDroiders.ladybuddy.Outside"
-            android:exported="true"
+            android:exported="false"
             android:label="Outside Instructions"
             android:parentActivityName="com.teamDroiders.ladybuddy.MagnoInst"
             android:theme="@style/Theme.New"/>
         <activity
             android:name="com.teamDroiders.ladybuddy.ChangingRoom"
-            android:exported="true"
+            android:exported="false"
             android:label="ChangingRoom Instructions"
             android:parentActivityName="com.teamDroiders.ladybuddy.MagnoInst"
             android:theme="@style/Theme.New"/>
         <activity
             android:name="com.teamDroiders.ladybuddy.Bedroom"
-            android:exported="true"
+            android:exported="false"
             android:label="Bedroom Instructions"
             android:parentActivityName="com.teamDroiders.ladybuddy.MagnoInst"
             android:theme="@style/Theme.New"/>
         <activity
             android:name="com.teamDroiders.ladybuddy.Bathroom"
-            android:exported="true"
+            android:exported="false"
             android:label="Bathroom Instructions"
             android:parentActivityName="com.teamDroiders.ladybuddy.MagnoInst"
             android:theme="@style/Theme.New"/>
         <activity
             android:name="com.teamDroiders.ladybuddy.ChoosenActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="Detect Hidden Cameras"
             android:parentActivityName="com.teamDroiders.ladybuddy.MainActivity"
             android:theme="@style/Theme.New" />
         <activity
             android:name="com.teamDroiders.ladybuddy.NewsActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="Women's News"
             android:parentActivityName="com.teamDroiders.ladybuddy.MainActivity"
             android:theme="@style/Theme.New" />
         <activity
             android:name="com.teamDroiders.ladybuddy.Instructions"
+            android:exported="false"
             android:label="App Tour"
             android:parentActivityName="com.teamDroiders.ladybuddy.MainActivity"
             android:theme="@style/Theme.New" />
-        <activity android:name="com.teamDroiders.ladybuddy.webactivity" />
+        <activity
+            android:name="com.teamDroiders.ladybuddy.webactivity"
+            android:exported="false" />
         <activity
             android:name="com.teamDroiders.ladybuddy.SmsActivity"
+            android:exported="false"
             android:label="Emergency Service"
             android:parentActivityName="com.teamDroiders.ladybuddy.MainActivity"
             android:theme="@style/Theme.New" />
-        <activity android:name="com.teamDroiders.ladybuddy.CurrentLocation" />
-        <activity android:name="com.teamDroiders.ladybuddy.Flashing" />
-        <activity android:name="com.teamDroiders.ladybuddy.SplashActivity">
+        <activity
+            android:name="com.teamDroiders.ladybuddy.CurrentLocation"
+            android:exported="false" />
+        <activity
+            android:name="com.teamDroiders.ladybuddy.Flashing"
+            android:exported="false" />
+        <activity
+            android:name="com.teamDroiders.ladybuddy.SplashActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.teamDroiders.ladybuddy.MainActivity" />
+        <activity
+            android:name="com.teamDroiders.ladybuddy.MainActivity"
+            android:exported="true" />
 
-        <receiver android:name="com.teamDroiders.ladybuddy.ScreenOnOffReceiver">
+        <receiver
+            android:name="com.teamDroiders.ladybuddy.ScreenOnOffReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SCREEN_OFF" />
                 <action android:name="android.intent.action.SCREEN_ON" />
@@ -115,7 +134,11 @@
         <service
             android:name="com.teamDroiders.ladybuddy.ScreenOnOffBackgroundService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Emergency safety monitoring and hidden camera detection via magnetometer."/>
+        </service>
     </application>
 
 </manifest>

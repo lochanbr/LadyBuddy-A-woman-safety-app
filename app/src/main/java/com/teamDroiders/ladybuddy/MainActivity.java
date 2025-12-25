@@ -5,15 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
+import androidx.annotation.NonNull;
 
 import android.Manifest;
-import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -24,20 +20,12 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 public class MainActivity extends AppCompatActivity {
     CardView siren, location, Settings, currentlocation, community, news, aboutUs, shareBtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
-
-        Intent backgroundService = new Intent( getApplicationContext(), ScreenOnOffBackgroundService.class );
-        this.startService( backgroundService );
         Log.d( ScreenOnOffReceiver.SCREEN_TOGGLE_TAG, "Activity onCreate" );
         int permissionCheck = ContextCompat.checkSelfPermission (MainActivity.this, Manifest.permission.SEND_SMS);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission (MainActivity.this,
@@ -87,7 +75,25 @@ public class MainActivity extends AppCompatActivity {
                     if(checkbox.isChecked ()) {
 
                         alertDialog.dismiss ();
-                        ActivityCompat.requestPermissions (MainActivity.this, new String[]{Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.CALL_PHONE}, 0);
+
+                        String[] permissions;
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                            permissions = new String[]{
+                                    Manifest.permission.SEND_SMS,
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    Manifest.permission.CALL_PHONE,
+                                    Manifest.permission.ACCESS_BACKGROUND_LOCATION // Added for Android 10+
+                            };
+                        } else {
+                            permissions = new String[]{
+                                    Manifest.permission.SEND_SMS,
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    Manifest.permission.CALL_PHONE
+                            };
+                        }
+                        ActivityCompat.requestPermissions(MainActivity.this, permissions, 0);
                     }else{
                         Toast.makeText (MainActivity.this,"Please accept privacy policy",Toast.LENGTH_LONG).show ();
 
@@ -96,6 +102,16 @@ public class MainActivity extends AppCompatActivity {
             });
             alertDialog.show();
 
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                android.content.Intent intent = new android.content.Intent(
+                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:" + getPackageName())
+                );
+                startActivityForResult(intent, 1234);
+            }
         }
 
         siren = findViewById( R.id.Siren );
@@ -165,7 +181,32 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+        if (requestCode == 0) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
 
+            if (allGranted) {
+                // Only start the service if the user said YES to everything
+                Intent backgroundService = new Intent(getApplicationContext(), ScreenOnOffBackgroundService.class);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(backgroundService);
+                } else {
+                    startService(backgroundService);
+                }
+            } else {
+                // Explain to the user why the app won't work
+                Toast.makeText(this, "Permissions are required for emergency SOS to function.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 
 }
